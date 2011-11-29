@@ -48,18 +48,34 @@
 //void below means the pointer points to byte data, if e.g. unsigned int *map_base
 //then should be: INT(map_base+GPIO_138_OFFSET_LOWER/4) = padconf;
 void *map_base;  
-int fd,i,j;
+int fd,i,j,loop_times;
 unsigned int padconf;
+char myCmd[500] = "dbus-send --print-reply --type=method_call --dest=com.nokia.mafw.renderer.Mafw-Gst-Renderer-Plugin.gstrenderer /com/nokia/mafw/renderer/gstrenderer com.nokia.mafw.extension.get_extension_property string:volume|awk '/nt/ {print $3}'";
 
-#define half_period 	30	//40, 50, 60: about Vpp=89V Vamp=88V and 58us/period
+//#define half_period 	30	//40, 50, 60: about Vpp=89V Vamp=88V and 58us/period
 				//30: about Vpp=80V Vamp=78V and 42us/period
 				//20: about Vpp=60V Vamp=54V and 30us/period
 				//10: about Vpp=46V Vamp=28V and 16us/period
-#define times		100	//repeate times of period
-#define sleep_time	2000	//3000: about 3ms
+//#define times		100	//repeate times of period
+//#define sleep_time	2000	//3000: about 3ms
 
 int main(int argc,char *argv[])
 {
+    FILE *streamCmd;
+    int bufCmd[1];
+    int volume;
+    int half_period = 50;
+    int times = 100;
+    int sleep_time = 2000;
+
+    streamCmd = popen(myCmd,"r");
+    memset(bufCmd, 0, sizeof(bufCmd));
+    fread(bufCmd, sizeof(int), sizeof(bufCmd), streamCmd);
+    volume = atoi(bufCmd);
+    printf("Current volume of the phone is %d\n",volume);
+
+    loop_times = 0;
+
     if((fd=open("/dev/mem",O_RDWR | O_SYNC))==-1){
         perror("open error!\n");
         return(-1);
@@ -95,8 +111,7 @@ int main(int argc,char *argv[])
     printf("GPIO1_DATAOUT_OFFSET - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);
 
     //Hello world!
-    while(1)
-	{
+    while(1){
 	//padconf ^=  GPIO24;  // Toggle GPIO_24
 	//INT(map_base+GPIO1_DATAOUT_OFFSET) = padconf;
 	for(j=0;j<times;j++){
@@ -110,8 +125,23 @@ int main(int argc,char *argv[])
 		INT(map_base+GPIO1_DATAOUT_OFFSET) = padconf; 
 		}
 	}
+
 	usleep(sleep_time);
-	} 	
+ 
+	loop_times = loop_times + 1;
+	if(loop_times == 10){//below part consume about 20ms, so influence the performance of this program 
+		loop_times = 0;
+		streamCmd = popen(myCmd,"r");
+    		//memset(bufCmd, 0, sizeof(bufCmd));
+    		fread(bufCmd, sizeof(int), sizeof(bufCmd), streamCmd);
+    		volume = atoi(bufCmd);
+		if(volume<0 || volume <100)
+			volume = 50;
+		times = volume;	
+		half_period = (int)(volume*0.4);
+		sleep_time = (int)(20000-volume*190);
+	}
+    } 	
 
     close(fd);
     munmap(map_base,0x40);
