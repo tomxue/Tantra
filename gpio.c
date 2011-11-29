@@ -61,16 +61,16 @@ char myCmd[500] = "dbus-send --print-reply --type=method_call --dest=com.nokia.m
 
 int main(int argc,char *argv[])
 {
-    FILE *streamCmd;
+    FILE *theVolumeValue;
     int bufCmd[1];
     int volume;
     int half_period = 50;
     int times = 100;
     int sleep_time = 2000;
 
-    streamCmd = popen(myCmd,"r");
+    theVolumeValue = fopen("volume_value","r");
     memset(bufCmd, 0, sizeof(bufCmd));
-    fread(bufCmd, sizeof(int), sizeof(bufCmd), streamCmd);
+    fread(bufCmd, sizeof(int), sizeof(bufCmd), theVolumeValue);
     volume = atoi(bufCmd);
     printf("Current volume of the phone is %d\n",volume);
 
@@ -131,9 +131,9 @@ int main(int argc,char *argv[])
 	loop_times = loop_times + 1;
 	if(loop_times == 10){//below part consume about 20ms, so influence the performance of this program 
 		loop_times = 0;
-		streamCmd = popen(myCmd,"r");
+		theVolumeValue = fopen("volume_value","r");
     		//memset(bufCmd, 0, sizeof(bufCmd));
-    		fread(bufCmd, sizeof(int), sizeof(bufCmd), streamCmd);
+    		fread(bufCmd, sizeof(int), sizeof(bufCmd), theVolumeValue);
     		volume = atoi(bufCmd);
 		if(volume<0 || volume <100)
 			volume = 50;
