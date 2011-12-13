@@ -1,0 +1,10 @@
+﻿Nokia-N900:~# ./gpio 
+Current volume of the phone is 45
+fd=4
+GPIO_BASE map_base=0x40020000
+GPIO_24_OFFSET_LOWER - The register value is set to: 0x70004 = 0d458756
+GPIO5_BASE map_base=0x40020000
+GPIO5_OE_OFFSET - The register value is set to: 0xfebbdfff = 0d4273725439
+GPIO1_DATAOUT_OFFSET - The register value is set to: 0x1440000 = 0d21233664
+sh: cannot fork
+Segmentation fault

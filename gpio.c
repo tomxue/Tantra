@@ -9,9 +9,13 @@
 #define GPIO_BASE 			0x48002000
 //GPIO_24 register address, the resigter is 32-bit
 #define GPIO_24_OFFSET_LOWER 		0x5f0
+#define GPIO_27_OFFSET_HIGHER		0x5f4
+#define GPIO_29_OFFSET_HIGHER		0x5f8
 
 //General-Purpose Interface Integration Figure, GPIO5: GPIO_[159:128]
 #define GPIO24  0x01000000			//GPIO24
+#define GPIO27	0x08000000			//GPIO27
+#define GPIO29	0x20000000			//GPIO29
 
 #define GPIO1_BASE 		0x48310000	//P3606
 #define GPIO1_OE_OFFSET 	0x034		//P3606, Output Data Enable Register
@@ -68,12 +72,12 @@ int main(int argc,char *argv[])
     int times = 100;
     int sleep_time = 2000;
 
-    theVolumeValue = fopen("volume_value","r");
+    /*theVolumeValue = fopen("volume_value","r");
     memset(bufCmd, 0, sizeof(bufCmd));
     fread(bufCmd, sizeof(int), sizeof(bufCmd), theVolumeValue);
     volume = atoi(bufCmd);
     printf("Current volume of the phone is %d\n",volume);
-
+    */
     loop_times = 0;
 
     if((fd=open("/dev/mem",O_RDWR | O_SYNC))==-1){
@@ -88,27 +92,40 @@ int main(int argc,char *argv[])
     printf("GPIO_BASE map_base=%p\n",map_base);
     //GPIO24
     padconf = INT(map_base+GPIO_24_OFFSET_LOWER);
-    padconf &= 0xFFFF0000; //[31:16]=GPIO_24  - Clear register bits [31:16]
-    padconf |= 0x00000004; //[31:16]=GPIO_24  - Select mux mode 4 for gpio
+    padconf &= 0xFFFF0000; //[15:0]=GPIO_24  - Clear register bits [15:0]
+    padconf |= 0x0000001c; //[15:0]=GPIO_24  - Select mux mode 4 for gpio
     INT(map_base+GPIO_24_OFFSET_LOWER) = padconf; 
     printf("GPIO_24_OFFSET_LOWER - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);    
+    //GPIO27
+    padconf = INT(map_base+GPIO_27_OFFSET_HIGHER);
+    padconf &= 0x0000FFFF; //[31:16]=GPIO_27  - Clear register bits [31:16]
+    padconf |= 0x001c0000; //[31:16]=GPIO_27  - Select mux mode 4 for gpio
+    INT(map_base+GPIO_27_OFFSET_HIGHER) = padconf; 
+    printf("GPIO_27_OFFSET_HIGHER - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);    
+    //GPIO29
+    padconf = INT(map_base+GPIO_29_OFFSET_HIGHER);
+    padconf &= 0x0000FFFF; //[31:16]=GPIO_29  - Clear register bits [31:16]
+    padconf |= 0x001c0000; //[31:16]=GPIO_29  - Select mux mode 4 for gpio
+    INT(map_base+GPIO_29_OFFSET_HIGHER) = padconf; 
+    printf("GPIO_29_OFFSET_HIGHER - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);    
     munmap(map_base,0x200);
 
 
-    //GPIO1: Set the OE and DATAOUT registers
+    //GPIO24/27/29 - GPIO1: Set the OE and DATAOUT registers
     map_base = mmap(0,0x40,PROT_READ | PROT_WRITE,MAP_SHARED,fd,GPIO1_BASE);
     printf("GPIO5_BASE map_base=%p\n",map_base);    
     //OE
     padconf = INT(map_base+GPIO1_OE_OFFSET);
-    padconf &= ~GPIO24;  // Set GPIO_24 to output
+    padconf &= ~(GPIO24 | GPIO27 | GPIO29);  // Set GPIO_24/27/29 to output
     INT(map_base+GPIO1_OE_OFFSET) = padconf; 
     printf("GPIO5_OE_OFFSET - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);
     //DATAOUT
     padconf = INT(map_base+GPIO1_DATAOUT_OFFSET);
-    padconf |=  GPIO24;  //Set GPIO_24 high
-    //padconf &= ~GPIO24;  //Set GPIO_24 low
+    padconf |=  (GPIO24 | GPIO27 | GPIO29);  //Set GPIO_24/27/29 high
+    //padconf &= ~(GPIO24 | GPIO27 | GPIO29);  //Set GPIO_24/27/29 low
     INT(map_base+GPIO1_DATAOUT_OFFSET) = padconf; 
     printf("GPIO1_DATAOUT_OFFSET - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);
+
 
     //Hello world!
     while(1){
@@ -116,20 +133,22 @@ int main(int argc,char *argv[])
 	//INT(map_base+GPIO1_DATAOUT_OFFSET) = padconf;
 	for(j=0;j<times;j++){
 		for(i=0;i<half_period;i++){
-    		padconf |=  GPIO24;  //Set GPIO_24 high
+    		padconf |=  (GPIO24 | GPIO27 | GPIO29);  //Set GPIO_24/27/29 high
     		INT(map_base+GPIO1_DATAOUT_OFFSET) = padconf;
+		printf("padconf = 0x%x\n", padconf);
 		}
 
 		for(i=0;i<half_period;i++){
-		padconf &= ~GPIO24;  //Set GPIO_24 low
+		padconf &= ~(GPIO24 | GPIO27 | GPIO29);  //Set GPIO_24/27/29 low
 		INT(map_base+GPIO1_DATAOUT_OFFSET) = padconf; 
+		printf("padconf = 0x%x\n", padconf);
 		}
 	}
 
 	usleep(sleep_time);
- 
+/*   
 	loop_times = loop_times + 1;
-	if(loop_times == 10){//below part consume about 20ms, so influence the performance of this program 
+	if(loop_times == 10){ //below part consume about 20ms, so influence the performance of this program 
 		loop_times = 0;
 		theVolumeValue = fopen("volume_value","r");
     		//memset(bufCmd, 0, sizeof(bufCmd));
@@ -140,7 +159,7 @@ int main(int argc,char *argv[])
 		times = volume;	
 		half_period = (int)(volume*0.4);
 		sleep_time = (int)(20000-volume*190);
-	}
+	}*/
     } 	
 
     close(fd);
