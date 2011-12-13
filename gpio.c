@@ -11,15 +11,24 @@
 #define GPIO_24_OFFSET_LOWER 		0x5f0
 #define GPIO_27_OFFSET_HIGHER		0x5f4
 #define GPIO_29_OFFSET_HIGHER		0x5f8
+#define GPIO_120_OFFSET_LOWER		0x144
+#define GPIO_122_OFFSET_LOWER		0x148
+#define GPIO_124_OFFSET_LOWER		0x14c
 
 //General-Purpose Interface Integration Figure, GPIO5: GPIO_[159:128]
 #define GPIO24  0x01000000			//GPIO24
 #define GPIO27	0x08000000			//GPIO27
 #define GPIO29	0x20000000			//GPIO29
+#define GPIO120 0x01000000
+#define GPIO122	0x04000000
+#define GPIO124	0x10000000
 
 #define GPIO1_BASE 		0x48310000	//P3606
+#define GPIO4_BASE		0x49054000	//P3606 GPIO[127:96]
 #define GPIO1_OE_OFFSET 	0x034		//P3606, Output Data Enable Register
-#define GPIO1_DATAOUT_OFFSET	0x03C		//P3606, Data Out register
+#define GPIO4_OE_OFFSET		0x034
+#define GPIO1_DATAOUT_OFFSET	0x03c		//P3606, Data Out register
+#define GPIO4_DATAOUT_OFFSET	0x03c
 
 #define INT *(volatile unsigned int*)
 
@@ -87,44 +96,44 @@ int main(int argc,char *argv[])
 
     printf("fd=%d\n",fd);
 
-    //GPIO1: Set the pinmux to select the GPIO signal
+    //Set the pinmux to select the GPIO signal
     map_base = mmap(0,0x200,PROT_READ | PROT_WRITE,MAP_SHARED,fd,GPIO_BASE);
     printf("GPIO_BASE map_base=%p\n",map_base);
-    //GPIO24
-    padconf = INT(map_base+GPIO_24_OFFSET_LOWER);
-    padconf &= 0xFFFF0000; //[15:0]=GPIO_24  - Clear register bits [15:0]
-    padconf |= 0x0000001c; //[15:0]=GPIO_24  - Select mux mode 4 for gpio
-    INT(map_base+GPIO_24_OFFSET_LOWER) = padconf; 
-    printf("GPIO_24_OFFSET_LOWER - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);    
-    //GPIO27
-    padconf = INT(map_base+GPIO_27_OFFSET_HIGHER);
-    padconf &= 0x0000FFFF; //[31:16]=GPIO_27  - Clear register bits [31:16]
-    padconf |= 0x001c0000; //[31:16]=GPIO_27  - Select mux mode 4 for gpio
-    INT(map_base+GPIO_27_OFFSET_HIGHER) = padconf; 
-    printf("GPIO_27_OFFSET_HIGHER - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);    
-    //GPIO29
-    padconf = INT(map_base+GPIO_29_OFFSET_HIGHER);
-    padconf &= 0x0000FFFF; //[31:16]=GPIO_29  - Clear register bits [31:16]
-    padconf |= 0x001c0000; //[31:16]=GPIO_29  - Select mux mode 4 for gpio
-    INT(map_base+GPIO_29_OFFSET_HIGHER) = padconf; 
-    printf("GPIO_29_OFFSET_HIGHER - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);    
+    //GPIO120
+    padconf = INT(map_base+GPIO_120_OFFSET_LOWER);
+    padconf &= 0xFFFF0000; //[15:0]=GPIO_120  - Clear register bits [15:0]
+    padconf |= 0x0000001c; //[15:0]=GPIO_120  - Select mux mode 4 for gpio
+    INT(map_base+GPIO_120_OFFSET_LOWER) = padconf; 
+    printf("GPIO_120_OFFSET_LOWER - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);    
+    //GPIO122
+    padconf = INT(map_base+GPIO_122_OFFSET_LOWER);
+    padconf &= 0xFFFF0000; //[15:0]=GPIO_122  - Clear register bits [15:0]
+    padconf |= 0x0000001c; //[15:0]=GPIO_122  - Select mux mode 4 for gpio
+    INT(map_base+GPIO_122_OFFSET_LOWER) = padconf; 
+    printf("GPIO_122_OFFSET_LOWER - The register value is set to: 0x%x = 0d%u\n", padconf,padconf); 
+    //GPIO124
+    padconf = INT(map_base+GPIO_124_OFFSET_LOWER);
+    padconf &= 0xFFFF0000; //[15:0]=GPIO_124  - Clear register bits [15:0]
+    padconf |= 0x0000001c; //[15:0]=GPIO_124  - Select mux mode 4 for gpio
+    INT(map_base+GPIO_124_OFFSET_LOWER) = padconf; 
+    printf("GPIO_124_OFFSET_LOWER - The register value is set to: 0x%x = 0d%u\n", padconf,padconf); 
     munmap(map_base,0x200);
 
 
-    //GPIO24/27/29 - GPIO1: Set the OE and DATAOUT registers
-    map_base = mmap(0,0x40,PROT_READ | PROT_WRITE,MAP_SHARED,fd,GPIO1_BASE);
-    printf("GPIO5_BASE map_base=%p\n",map_base);    
+    //GPIO120/122/124 - GPIO4: Set the OE and DATAOUT registers
+    map_base = mmap(0,0x40,PROT_READ | PROT_WRITE,MAP_SHARED,fd,GPIO4_BASE);
+    printf("GPIO4_BASE map_base=%p\n",map_base);    
     //OE
-    padconf = INT(map_base+GPIO1_OE_OFFSET);
-    padconf &= ~(GPIO24 | GPIO27 | GPIO29);  // Set GPIO_24/27/29 to output
-    INT(map_base+GPIO1_OE_OFFSET) = padconf; 
-    printf("GPIO5_OE_OFFSET - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);
+    padconf = INT(map_base+GPIO4_OE_OFFSET);
+    padconf &= ~(GPIO120 | GPIO122 | GPIO124);  // Set GPIO_120/122/124 to output
+    INT(map_base+GPIO4_OE_OFFSET) = padconf; 
+    printf("GPIO4_OE_OFFSET - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);
     //DATAOUT
-    padconf = INT(map_base+GPIO1_DATAOUT_OFFSET);
-    padconf |=  (GPIO24 | GPIO27 | GPIO29);  //Set GPIO_24/27/29 high
-    //padconf &= ~(GPIO24 | GPIO27 | GPIO29);  //Set GPIO_24/27/29 low
-    INT(map_base+GPIO1_DATAOUT_OFFSET) = padconf; 
-    printf("GPIO1_DATAOUT_OFFSET - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);
+    padconf = INT(map_base+GPIO4_DATAOUT_OFFSET);
+    padconf |=  (GPIO120 | GPIO122 | GPIO124);  //Set GPIO_120/122/124 high
+    //padconf &= ~(GPIO120 | GPIO122 | GPIO124);  //Set GPIO_120/122/124 low
+    INT(map_base+GPIO4_DATAOUT_OFFSET) = padconf; 
+    printf("GPIO4_DATAOUT_OFFSET - The register value is set to: 0x%x = 0d%u\n", padconf,padconf);
 
 
     //Hello world!
@@ -133,14 +142,14 @@ int main(int argc,char *argv[])
 	//INT(map_base+GPIO1_DATAOUT_OFFSET) = padconf;
 	for(j=0;j<times;j++){
 		for(i=0;i<half_period;i++){
-    		padconf |=  (GPIO24 | GPIO27 | GPIO29);  //Set GPIO_24/27/29 high
-    		INT(map_base+GPIO1_DATAOUT_OFFSET) = padconf;
+    		padconf |=  (GPIO120 | GPIO122 | GPIO124);  //Set GPIO_120/122/124 high
+    		INT(map_base+GPIO4_DATAOUT_OFFSET) = padconf;
 		printf("padconf = 0x%x\n", padconf);
 		}
 
 		for(i=0;i<half_period;i++){
-		padconf &= ~(GPIO24 | GPIO27 | GPIO29);  //Set GPIO_24/27/29 low
-		INT(map_base+GPIO1_DATAOUT_OFFSET) = padconf; 
+		padconf &= ~(GPIO120 | GPIO122 | GPIO124);  //Set GPIO_120/122/124 low
+		INT(map_base+GPIO4_DATAOUT_OFFSET) = padconf; 
 		printf("padconf = 0x%x\n", padconf);
 		}
 	}
