@@ -25,8 +25,27 @@
 #include <plat/mux.h>	//omap_cfg_reg
 #include <linux/irq.h>	//IRQ_TYPE_LEVEL_LOW
 
-#define times		40
-#define half_period	25
+#define times		20
+#define half_period	15	
+
+/*
+Test result on Adapter Board No.1:
+
+times: 10 		pulse width 1.8ms
+times: 20		pulse width 3.5ms
+times: 40		pulse width 7.2ms
+half_period: 50  	pulse amplitude 119.8V
+half_period: 25		pulse amplitude 143.8V
+half_period: 20		pulse amplitude 151.9V
+half_period: 17		pulse amplitude 153.9V
+half_period: 15		pulse amplitude 156.0V
+half_period: 10		pulse amplitude 156.0V
+half_period: 8		pulse amplitude 143.6V
+half_period: 7		pulse amplitude 129.2V
+half_period: 5		pulse amplitude 99.28V
+half_period: 4		pulse amplitude 77.51V
+half_period: 3		pulse amplitude 60.82V
+*/
 
 MODULE_LICENSE("GPL");
 
@@ -92,4 +111,5 @@ static void hello_exit(void)
 
 module_init(hello_init);
 module_exit(hello_exit);
+
 
